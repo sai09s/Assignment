@@ -7,6 +7,7 @@ import com.example.rewards.rewardsystem.model.Transaction;
 import com.example.rewards.rewardsystem.repository.CustomerRepository;
 import com.example.rewards.rewardsystem.repository.TransactionRepository;
 import java.time.LocalDate;
+import com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,51 +42,73 @@ public class TransactionService {
     return transactionRepository.save(transaction);
   }
 
-  public Map<String, Object> calculateRewards(Long customer_id) {
-    List<Transaction> transactions =
-        transactionRepository.findByCustomerIdOrderByDateDesc(customer_id);
+  public CustomerRewardResponseDto calculateRewards(Long customerId) {
+    Customer customer = customerRepository.findById(customerId)
+        .orElseThrow(() -> new com.example.rewards.rewardsystem.exception.CustomException(
+            com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND));
+    List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
     int totalPoints = 0;
-    // pointsPerMonth is Object that contains year-month and points
     Map<String, Integer> pointsPerMonth = new HashMap<>();
+    List<TransactionResponseDto> transactionDtos = transactions.stream()
+        .map(t -> new TransactionResponseDto(t.getId(), t.getAmount(), t.getDate().toString()))
+        .collect(Collectors.toList());
     for (Transaction transaction : transactions) {
       int points = this.calculatePoints(transaction.getAmount());
       totalPoints += points;
       String month = transaction.getDate().getYear() + "-" + transaction.getDate().getMonthValue();
-      if (pointsPerMonth.containsKey(month)) {
-        pointsPerMonth.put(month, pointsPerMonth.get(month) + points);
-      } else {
-        pointsPerMonth.put(month, points);
-      }
+      pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
     }
-    Map<String, Object> makeResponse = new HashMap<>();
-    makeResponse.put("totalPoints", totalPoints);
-    makeResponse.put("pointsPerMonth", pointsPerMonth);
-    return makeResponse;
+    return new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
+        customer.getId(),
+        customer.getName(),
+        transactionDtos,
+        totalPoints,
+        pointsPerMonth
+    );
   }
 
-  public Map<String, Object> calculateRewardsCustomDateRange(
+  public CustomerRewardResponseDto calculateRewardsCustomDateRange(
       Long customerId, String startDate, String endDate) {
-    List<Transaction> transactions =
-        transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
+    Customer customer = customerRepository.findById(customerId)
+        .orElseThrow(() -> new com.example.rewards.rewardsystem.exception.CustomException(
+            com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND));
+    LocalDate start;
+    LocalDate end;
+    try {
+      start = LocalDate.parse(startDate);
+      end = LocalDate.parse(endDate);
+    } catch (Exception e) {
+      throw new com.example.rewards.rewardsystem.exception.CustomException("Invalid date format. Use yyyy-MM-dd.");
+    }
+    if (end.isBefore(start)) {
+      throw new com.example.rewards.rewardsystem.exception.CustomException("End date must not be before start date.");
+    }
+    List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
     int totalPoints = 0;
     Map<String, Integer> pointsPerMonth = new HashMap<>();
-    LocalDate start = LocalDate.parse(startDate);
-    LocalDate end = LocalDate.parse(endDate);
-
+    List<TransactionResponseDto> transactionDtos = transactions.stream()
+        .filter(t -> {
+          LocalDate date = t.getDate();
+          return (date.isEqual(start) || date.isAfter(start)) && (date.isEqual(end) || date.isBefore(end));
+        })
+        .map(t -> new TransactionResponseDto(t.getId(), t.getAmount(), t.getDate().toString()))
+        .collect(Collectors.toList());
     for (Transaction transaction : transactions) {
       LocalDate date = transaction.getDate();
-      if ((date.isEqual(start) || date.isAfter(start))
-          && (date.isEqual(end) || date.isBefore(end))) {
+      if ((date.isEqual(start) || date.isAfter(start)) && (date.isEqual(end) || date.isBefore(end))) {
         int points = this.calculatePoints(transaction.getAmount());
         totalPoints += points;
         String month = date.getYear() + "-" + date.getMonthValue();
         pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
       }
     }
-    Map<String, Object> response = new HashMap<>();
-    response.put("totalPoints", totalPoints);
-    response.put("pointsPerMonth", pointsPerMonth);
-    return response;
+    return new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
+        customer.getId(),
+        customer.getName(),
+        transactionDtos,
+        totalPoints,
+        pointsPerMonth
+    );
   }
 
   public Map<String, Object> calculateRewardsByMonths(Long customerId, int months) {

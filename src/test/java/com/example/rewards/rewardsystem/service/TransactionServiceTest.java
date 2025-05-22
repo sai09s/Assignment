@@ -43,8 +43,12 @@ class TransactionServiceTest {
     when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId))
         .thenReturn(Collections.singletonList(transaction));
     var result = transactionService.calculateRewardsCustomDateRange(customerId, startDate, endDate);
-    assertEquals(90, result.get("totalPoints"));
-    assertTrue(((java.util.Map<?, ?>) result.get("pointsPerMonth")).containsKey("2023-6"));
+    assertEquals(90, result.getTotalPoints());
+    assertTrue(result.getPointsPerMonth().containsKey("2023-6"));
+    assertEquals(1, result.getTransactions().size());
+    assertEquals(1L, result.getTransactions().get(0).getId());
+    assertEquals(120.0, result.getTransactions().get(0).getAmount());
+    assertEquals("2023-06-15", result.getTransactions().get(0).getDate());
   }
 
   @Test

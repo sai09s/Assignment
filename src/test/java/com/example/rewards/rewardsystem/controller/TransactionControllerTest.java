@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.rewards.rewardsystem.service.TransactionService;
-import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +19,17 @@ class TransactionControllerTest {
 
   @Test
   void testCalculateRewardsByRange() throws Exception {
+    // Prepare a mock CustomerRewardResponseDto
+    var mockResponse = new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
+        1L,
+        "Test User",
+        java.util.Collections.emptyList(),
+        0,
+        java.util.Collections.emptyMap()
+    );
     Mockito.when(
             transactionService.calculateRewardsCustomDateRange(anyLong(), anyString(), anyString()))
-        .thenReturn(new HashMap<>());
+        .thenReturn(mockResponse);
     mockMvc
         .perform(post("/calculateRewardsByRange/1?startDate=2023-01-01&endDate=2023-12-31"))
         .andExpect(status().isOk());

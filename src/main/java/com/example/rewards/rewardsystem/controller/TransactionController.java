@@ -27,13 +27,13 @@ public class TransactionController {
   }
 
   @GetMapping("/calculateRewards/{customerId}")
-  public Map<String, Object> calculateRewards(@PathVariable Long customerId) {
+  public com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto calculateRewards(@PathVariable Long customerId) {
     return transactionService.calculateRewards(customerId);
   }
 
   // calculate rewards for custom 3 months - may be date range
   @PostMapping("/calculateRewardsByRange/{customerId}")
-  public Map<String, Object> calculateRewardsByRange(
+  public com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto calculateRewardsByRange(
       @PathVariable Long customerId, @RequestParam String startDate, @RequestParam String endDate) {
     return transactionService.calculateRewardsCustomDateRange(customerId, startDate, endDate);
   }
