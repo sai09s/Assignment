@@ -1,6 +1,5 @@
 package com.example.rewards.rewardsystem;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionDTO {
-    private String amount;
-    private String date;
-    private Long customerId;
+  private String amount;
+  private String date;
+  private Long customerId;
 }

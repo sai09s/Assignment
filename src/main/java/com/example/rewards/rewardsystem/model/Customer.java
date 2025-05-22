@@ -1,14 +1,12 @@
 package com.example.rewards.rewardsystem.model;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
 
 @Setter
 @Getter
@@ -16,14 +14,14 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 public class Customer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    @OneToMany(mappedBy = "customer")
-    @JsonBackReference
-    private List<Transaction> transactions;
+  @OneToMany(mappedBy = "customer")
+  @JsonBackReference
+  private List<Transaction> transactions;
 }
