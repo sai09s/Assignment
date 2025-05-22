@@ -1,6 +1,7 @@
 package com.example.rewards.rewardsystem.controller;
 
 import com.example.rewards.rewardsystem.model.Customer;
+import com.example.rewards.rewardsystem.dto.CustomerResponseDto;
 import com.example.rewards.rewardsystem.service.CustomerService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +16,7 @@ public class CustomerController {
     }
 
     @PostMapping("/customer")
-    public Customer createCustomer(@RequestBody Customer customer) {
+    public CustomerResponseDto createCustomer(@RequestBody Customer customer) {
         return customerService.createCustomer(customer);
     }
 

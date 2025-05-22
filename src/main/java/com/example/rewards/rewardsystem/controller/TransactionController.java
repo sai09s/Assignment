@@ -2,6 +2,7 @@ package com.example.rewards.rewardsystem.controller;
 
 import com.example.rewards.rewardsystem.TransactionDTO;
 import com.example.rewards.rewardsystem.model.Transaction;
+import com.example.rewards.rewardsystem.dto.TransactionResponseDto;
 import com.example.rewards.rewardsystem.service.TransactionService;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,7 @@ public class TransactionController {
     }
 
     @GetMapping("/transactions/{customerId}")
-    public List<Transaction> getTransactions(@PathVariable Long customerId) {
+    public List<TransactionResponseDto> getTransactions(@PathVariable Long customerId) {
         return transactionService.getTransactions(customerId);
     }
 

@@ -4,6 +4,7 @@ import com.example.rewards.rewardsystem.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 
 import com.example.rewards.rewardsystem.model.Customer;
+import com.example.rewards.rewardsystem.dto.CustomerResponseDto;
 
 @Service
 public class CustomerService {
@@ -13,8 +14,9 @@ public class CustomerService {
         this.customerRepository = customerRepository;
     }
 
-    public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
+    public CustomerResponseDto createCustomer(Customer customer) {
+        Customer saved = customerRepository.save(customer);
+        return new CustomerResponseDto(saved.getId(), saved.getName());
     }
 
 }

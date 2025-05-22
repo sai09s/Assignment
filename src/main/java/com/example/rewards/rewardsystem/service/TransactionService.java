@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import com.example.rewards.rewardsystem.dto.TransactionResponseDto;
 
 
 @Service
@@ -63,10 +65,15 @@ public class TransactionService {
         return makeResponse;
     }
 
-    public List<Transaction> getTransactions(Long customerId) {
+    public List<TransactionResponseDto> getTransactions(Long customerId) {
         List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
-
-        return transactions;
+        return transactions.stream()
+                .map(t -> new TransactionResponseDto(
+                        t.getId(),
+                        t.getAmount(),
+                        t.getDate().toString()
+                ))
+                .collect(Collectors.toList());
     }
 
     private int calculatePoints(double amount) {
