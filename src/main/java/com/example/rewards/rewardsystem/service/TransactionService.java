@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Service
 public class TransactionService {
@@ -31,7 +30,9 @@ public class TransactionService {
 
         Customer customer = customerRepository.findById(customerId).orElse(null);
         if (customer == null) {
-            throw new RuntimeException("Customer not found");
+            throw new com.example.rewards.rewardsystem.exception.CustomException(
+                com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND
+            );
         }
         Transaction transaction = new Transaction();
         transaction.setAmount(transactionDTO.getAmount());
