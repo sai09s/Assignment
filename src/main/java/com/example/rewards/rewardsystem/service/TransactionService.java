@@ -65,6 +65,51 @@ public class TransactionService {
         return makeResponse;
     }
 
+
+    public Map<String, Object> calculateRewardsCustomDateRange(Long customerId, String startDate, String endDate) {
+        List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
+        int totalPoints = 0;
+        Map<String, Integer> pointsPerMonth = new HashMap<>();
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        for (Transaction transaction : transactions) {
+            LocalDate date = transaction.getDate();
+            if ((date.isEqual(start) || date.isAfter(start)) && (date.isEqual(end) || date.isBefore(end))) {
+                int points = this.calculatePoints(transaction.getAmount());
+                totalPoints += points;
+                String month = date.getYear() + "-" + date.getMonthValue();
+                pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
+            }
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalPoints", totalPoints);
+        response.put("pointsPerMonth", pointsPerMonth);
+        return response;
+    }
+
+    public Map<String, Object> calculateRewardsByMonths(Long customerId, int months) {
+        List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
+        int totalPoints = 0;
+        Map<String, Integer> pointsPerMonth = new HashMap<>();
+        LocalDate now = LocalDate.now();
+        LocalDate fromDate = now.minusMonths(months).withDayOfMonth(1);
+
+        for (Transaction transaction : transactions) {
+            LocalDate date = transaction.getDate();
+            if (!date.isBefore(fromDate)) {
+                int points = this.calculatePoints(transaction.getAmount());
+                totalPoints += points;
+                String month = date.getYear() + "-" + date.getMonthValue();
+                pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
+            }
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalPoints", totalPoints);
+        response.put("pointsPerMonth", pointsPerMonth);
+        return response;
+    }
+
     public List<TransactionResponseDto> getTransactions(Long customerId) {
         List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
         return transactions.stream()
@@ -85,4 +130,7 @@ public class TransactionService {
             return (int) (50 + (amount - 100) * 2);
         }
     }
+
+
+
 }
