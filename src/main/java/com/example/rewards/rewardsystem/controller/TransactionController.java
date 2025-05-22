@@ -27,7 +27,8 @@ public class TransactionController {
   }
 
   @GetMapping("/calculateRewards/{customerId}")
-  public com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto calculateRewards(@PathVariable Long customerId) {
+  public com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto calculateRewards(
+      @PathVariable Long customerId) {
     return transactionService.calculateRewards(customerId);
   }
 

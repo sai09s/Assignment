@@ -20,13 +20,13 @@ class TransactionControllerTest {
   @Test
   void testCalculateRewardsByRange() throws Exception {
     // Prepare a mock CustomerRewardResponseDto
-    var mockResponse = new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
-        1L,
-        "Test User",
-        java.util.Collections.emptyList(),
-        0,
-        java.util.Collections.emptyMap()
-    );
+    var mockResponse =
+        new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
+            1L,
+            "Test User",
+            java.util.Collections.emptyList(),
+            0,
+            java.util.Collections.emptyMap());
     Mockito.when(
             transactionService.calculateRewardsCustomDateRange(anyLong(), anyString(), anyString()))
         .thenReturn(mockResponse);
