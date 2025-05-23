@@ -12,18 +12,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final CustomerRepository customerRepository;
+  private final RewardCalculator rewardCalculator;
 
+  @Autowired
   public TransactionService(
-      TransactionRepository transactionRepository, CustomerRepository customerRepository) {
-
+      TransactionRepository transactionRepository,
+      CustomerRepository customerRepository,
+      RewardCalculator rewardCalculator) {
     this.transactionRepository = transactionRepository;
     this.customerRepository = customerRepository;
+    this.rewardCalculator = rewardCalculator;
   }
 
   public TransactionResponseDto createTransaction(TransactionDTO transactionDTO) {
@@ -70,7 +75,7 @@ public CustomerRewardResponseDto calculateRewardsCustomDateRange(
             .collect(Collectors.toList());
     for (Transaction transaction : transactions) {
       LocalDate date = transaction.getDate();
-      int points = this.calculatePoints(transaction.getAmount().doubleValue());
+      int points = rewardCalculator.calculatePoints(transaction.getAmount().doubleValue());
       totalPoints += points;
       String month = date.getYear() + "-" + date.getMonthValue();
       pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
@@ -91,7 +96,7 @@ public CustomerRewardResponseDto calculateRewardsCustomDateRange(
     Map<String, Integer> pointsPerMonth = new HashMap<>();
     for (Transaction transaction : transactions) {
       LocalDate date = transaction.getDate();
-      int points = this.calculatePoints(transaction.getAmount().doubleValue());
+      int points = rewardCalculator.calculatePoints(transaction.getAmount().doubleValue());
       totalPoints += points;
       String month = date.getYear() + "-" + date.getMonthValue();
       pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
@@ -113,13 +118,5 @@ public CustomerRewardResponseDto calculateRewardsCustomDateRange(
         .collect(Collectors.toList());
   }
 
-  private int calculatePoints(double amount) {
-    if (amount <= 50) {
-      return 0;
-    } else if (amount <= 100) {
-      return (int) (amount - 50);
-    } else {
-      return (int) (50 + (amount - 100) * 2);
-    }
-  }
+  // calculatePoints moved to RewardCalculator
 }

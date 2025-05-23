@@ -18,37 +18,77 @@ http://localhost:8090
 
 ### Endpoints
 
-```bash
-POST /customer  - create a new customer record
 
-POST /transaction - create a new transaction record
+### API Endpoints
 
-GET /transactions/{customerId} - get transaction records by customer id
+```http
+POST   /customer
+    # Create a new customer
 
-GET /calculateRewards/{customerId} - calculate rewards by customer id
+POST   /transaction
+    # Create a new transaction
+
+GET    /transactions/{customerId}
+    # Get all transactions for a customer (sorted by date desc)
+
+GET    /calculateRewards/{customerId}
+    # Get total and per-month rewards for a customer
+
+GET    /calculateRewardsByRange/{customerId}?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+    # Get rewards for a customer in a custom date range
+
+GET    /calculateRewardsByMonths/{customerId}?months=N
+    # Get rewards for a customer for the last N months
 ```
 
 
 ### Sample Requests and Responses
 
 To create a new customer record
+
 ```bash
 curl -X POST --location "http://localhost:8090/customer" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "user13"
-        }'
+    }'
+```
+
+Response:
+```json
+{
+  "id": 1,
+  "name": "user13"
+}
 ```
 
 To create a new transaction record by customer id
+
 ```bash
 curl -X POST --location "http://localhost:8090/transaction" \
     -H "Content-Type: application/json" \
     -d '{
-  "amount": "201",
+  "amount": 201.0,
   "date": "2022-05-21",
   "customerId": 19
 }'
+```
+
+Request DTO:
+```json
+{
+  "amount": 201.0,
+  "date": "2022-05-21",
+  "customerId": 19
+}
+```
+Response:
+```json
+{
+  "id": 1,
+  "amount": 201.0,
+  "date": "2022-05-21"
+}
 ```
 
 To get trasaction records by customer id, here 12 is the customer id
@@ -60,6 +100,7 @@ curl -X GET --location "http://localhost:8090/transactions/12"
 NOTE: sorted by date in descending order
 
 we will get the response in the following format
+
 ```json
 [
   {
@@ -82,26 +123,73 @@ we will get the response in the following format
 
 ### Reward Calculation
 
+
 ```bash
 curl -X GET --location "http://localhost:8090/calculateRewards/12"
 ```
 
-### response
-
+Response:
 ```json
 {
+  "customerId": 12,
+  "customerName": "user13",
+  "transactions": [
+    {
+      "id": 184,
+      "amount": 892.0,
+      "date": "2023-12-15"
+    }
+  ],
   "totalPoints": 12070,
   "pointsPerMonth": {
     "2023-8": 2416,
-    "2023-11": 222,
-    "2023-6": 1518,
-    "2023-12": 1634,
-    "2023-7": 1338,
-    "2022-11": 1214,
-    "2022-8": 228,
-    "2022-12": 684,
-    "2023-5": 1638,
-    "2022-1": 1178
+    "2023-11": 222
   }
+}
+```
+
+#### Calculate Rewards By Date Range
+
+```bash
+curl -X GET --location "http://localhost:8090/calculateRewardsByRange/12?startDate=2023-01-01&endDate=2023-12-31"
+```
+
+Response:
+```json
+{
+  "customerId": 12,
+  "customerName": "user13",
+  "transactions": [
+    {
+      "id": 184,
+      "amount": 892.0,
+      "date": "2023-12-15"
+    }
+  ],
+  "totalPoints": 12070,
+  "pointsPerMonth": {
+    "2023-8": 2416,
+    "2023-11": 222
+  }
+}
+```
+
+#### Calculate Rewards By Months
+
+```bash
+curl -X GET --location "http://localhost:8090/calculateRewardsByMonths/12?months=3"
+```
+
+Response:
+```json
+{
+  "customerId": 12,
+  "customerName": "user13",
+  "totalPointsInPeriod": 1200,
+  "pointsPerMonth": {
+    "2023-8": 416,
+    "2023-7": 784
+  },
+  "monthsConsidered": 3
 }
 ```

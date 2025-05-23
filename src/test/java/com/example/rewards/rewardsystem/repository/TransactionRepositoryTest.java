@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.example.rewards.rewardsystem.model.Customer;
 import com.example.rewards.rewardsystem.model.Transaction;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ class TransactionRepositoryTest {
     customer.setName("RepoTest");
     customer = customerRepository.save(customer);
     Transaction tx = new Transaction();
-    tx.setAmount(new java.math.BigDecimal("100.0"));
+    tx.setAmount(new BigDecimal("100.0"));
     tx.setDate(LocalDate.now());
     tx.setCustomer(customer);
     transactionRepository.save(tx);
