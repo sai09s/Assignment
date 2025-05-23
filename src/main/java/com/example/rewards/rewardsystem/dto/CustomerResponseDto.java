@@ -1,15 +1,9 @@
 package com.example.rewards.rewardsystem.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Value;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class CustomerResponseDto {
-  private Long id;
-  private String name;
+    Long id;
+    String name;
 }

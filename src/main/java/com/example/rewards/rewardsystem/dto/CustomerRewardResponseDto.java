@@ -2,19 +2,13 @@ package com.example.rewards.rewardsystem.dto;
 
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Value;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class CustomerRewardResponseDto {
-  private Long customerId;
-  private String customerName;
-  private List<TransactionResponseDto> transactions;
-  private int totalPoints;
-  private Map<String, Integer> pointsPerMonth;
+    Long customerId;
+    String customerName;
+    List<TransactionResponseDto> transactions;
+    int totalPoints;
+    Map<String, Integer> pointsPerMonth;
 }

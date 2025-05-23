@@ -22,23 +22,23 @@ http://localhost:8090
 ### API Endpoints
 
 ```http
-POST   /customer
-    # Create a new customer
+POST   /api/v1/customer
+    # Create a new customer (returns HTTP 201)
 
-POST   /transaction
-    # Create a new transaction
+POST   /api/v1/transaction
+    # Create a new transaction (returns HTTP 201)
 
-GET    /transactions/{customerId}
+GET    /api/v1/transactions/{customerId}
     # Get all transactions for a customer (sorted by date desc)
 
-GET    /calculateRewards/{customerId}
+GET    /api/v1/calculateRewards/{customerId}
     # Get total and per-month rewards for a customer
 
-GET    /calculateRewardsByRange/{customerId}?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+GET    /api/v1/calculateRewardsByRange/{customerId}?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
     # Get rewards for a customer in a custom date range
 
-GET    /calculateRewardsByMonths/{customerId}?months=N
-    # Get rewards for a customer for the last N months
+GET    /api/v1/calculateRewardsByMonths/{customerId}?months=N
+    # Get rewards for a customer for the last N months (months >= 1)
 ```
 
 
@@ -47,7 +47,7 @@ GET    /calculateRewardsByMonths/{customerId}?months=N
 To create a new customer record
 
 ```bash
-curl -X POST --location "http://localhost:8090/customer" \
+curl -X POST --location "http://localhost:8090/api/v1/customer" \
     -H "Content-Type: application/json" \
     -d '{
         "name": "user13"
@@ -65,7 +65,7 @@ Response:
 To create a new transaction record by customer id
 
 ```bash
-curl -X POST --location "http://localhost:8090/transaction" \
+curl -X POST --location "http://localhost:8090/api/v1/transaction" \
     -H "Content-Type: application/json" \
     -d '{
   "amount": 201.0,
@@ -93,7 +93,7 @@ Response:
 
 To get trasaction records by customer id, here 12 is the customer id
 ```bash
-curl -X GET --location "http://localhost:8090/transactions/12"
+curl -X GET --location "http://localhost:8090/api/v1/transactions/12"
 ```
 
 ### response
@@ -125,7 +125,7 @@ we will get the response in the following format
 
 
 ```bash
-curl -X GET --location "http://localhost:8090/calculateRewards/12"
+curl -X GET --location "http://localhost:8090/api/v1/calculateRewards/12"
 ```
 
 Response:
@@ -151,7 +151,7 @@ Response:
 #### Calculate Rewards By Date Range
 
 ```bash
-curl -X GET --location "http://localhost:8090/calculateRewardsByRange/12?startDate=2023-01-01&endDate=2023-12-31"
+curl -X GET --location "http://localhost:8090/api/v1/calculateRewardsByRange/12?startDate=2023-01-01&endDate=2023-12-31"
 ```
 
 Response:
@@ -177,7 +177,18 @@ Response:
 #### Calculate Rewards By Months
 
 ```bash
-curl -X GET --location "http://localhost:8090/calculateRewardsByMonths/12?months=3"
+curl -X GET --location "http://localhost:8090/api/v1/calculateRewardsByMonths/12?months=3"
+
+---
+#### Notes on Code & Configuration
+
+- All endpoints now use `/api/v1` as the base path.
+- Resource creation endpoints return HTTP 201 (Created).
+- All monetary values are handled with high precision (`BigDecimal`).
+- DTOs are immutable for safety and clarity.
+- Input validation is enforced (e.g., `months` must be ≥ 1).
+- Database credentials are now set via environment variables in `application.properties`.
+- `spring.jpa.hibernate.ddl-auto=update` is commented out for production safety.
 ```
 
 Response:

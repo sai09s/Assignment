@@ -2,6 +2,7 @@ package com.example.rewards.rewardsystem.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import com.example.rewards.rewardsystem.exception.ResourceNotFoundException;
 
 import com.example.rewards.rewardsystem.model.Customer;
 import com.example.rewards.rewardsystem.model.Transaction;
@@ -11,13 +12,17 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 import java.math.BigDecimal;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Arrays;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.jupiter.api.BeforeEach;
 
+
+@ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
 
   @Test
@@ -51,7 +56,7 @@ class TransactionServiceTest {
     Transaction t51 = new Transaction(2L, new BigDecimal("51.0"), LocalDate.of(2023, 1, 11), customer);
     Transaction t100 = new Transaction(3L, new BigDecimal("100.0"), LocalDate.of(2023, 1, 12), customer);
     Transaction t101 = new Transaction(4L, new BigDecimal("101.0"), LocalDate.of(2023, 1, 13), customer);
-    when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId)).thenReturn(java.util.Arrays.asList(t101, t100, t51, t50));
+    when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId)).thenReturn(Arrays.asList(t101, t100, t51, t50));
 
     // Act
     var result = transactionService.calculateRewards(customerId);
@@ -72,7 +77,7 @@ class TransactionServiceTest {
     Transaction janTx = new Transaction(1L, new BigDecimal("120.0"), LocalDate.of(2023, 1, 15), customer);
     Transaction febTx = new Transaction(2L, new BigDecimal("80.0"), LocalDate.of(2023, 2, 10), customer);
     Transaction marTx = new Transaction(3L, new BigDecimal("60.0"), LocalDate.of(2023, 3, 5), customer);
-    when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId)).thenReturn(java.util.Arrays.asList(marTx, febTx, janTx));
+    when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId)).thenReturn(Arrays.asList(marTx, febTx, janTx));
 
     // Act
     var result = transactionService.calculateRewards(customerId);
@@ -153,7 +158,7 @@ class TransactionServiceTest {
     Transaction tx1 = new Transaction(1L, new BigDecimal("120.0"), now.withDayOfMonth(2), customer);
     Transaction tx2 = new Transaction(2L, new BigDecimal("80.0"), lastMonth.withDayOfMonth(10), customer);
     when(transactionRepository.findByCustomerIdAndDateBetweenOrderByDateDesc(eq(customerId), any(LocalDate.class), any(LocalDate.class)))
-        .thenReturn(java.util.Arrays.asList(tx1, tx2));
+        .thenReturn(Arrays.asList(tx1, tx2));
 
     // Act
     var result = transactionService.calculateRewardsByMonths(customerId, 2);
@@ -170,7 +175,6 @@ class TransactionServiceTest {
 
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
     rewardCalculator = new RewardCalculator();
     transactionService = new TransactionService(transactionRepository, customerRepository, rewardCalculator);
   }
@@ -184,11 +188,11 @@ class TransactionServiceTest {
       "120,90",
       "200,250"
   })
-  void testCalculatePointsParameterized(double amount, int expectedPoints) {
+  void testCalculatePointsParameterized(String amountStr, int expectedPoints) {
     // Arrange
     RewardCalculator calculator = new RewardCalculator();
     // Act
-    int points = calculator.calculatePoints(amount);
+    int points = calculator.calculatePoints(new BigDecimal(amountStr));
     // Assert
     assertEquals(expectedPoints, points);
   }
@@ -234,7 +238,7 @@ class TransactionServiceTest {
 
     // Act & Assert
     assertThrows(
-        com.example.rewards.rewardsystem.exception.CustomException.class,
+        ResourceNotFoundException.class,
         () ->
             transactionService.calculateRewardsCustomDateRange(
                 customerId, LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)));
