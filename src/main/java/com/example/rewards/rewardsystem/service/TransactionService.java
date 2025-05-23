@@ -1,6 +1,6 @@
 package com.example.rewards.rewardsystem.service;
 
-import com.example.rewards.rewardsystem.TransactionDTO;
+import com.example.rewards.rewardsystem.dto.TransactionDTO;
 import com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto;
 import com.example.rewards.rewardsystem.dto.TransactionResponseDto;
 import com.example.rewards.rewardsystem.model.Customer;
@@ -26,9 +26,8 @@ public class TransactionService {
     this.customerRepository = customerRepository;
   }
 
-  public Transaction createTransaction(TransactionDTO transactionDTO) {
+  public TransactionResponseDto createTransaction(TransactionDTO transactionDTO) {
     Long customerId = transactionDTO.getCustomerId();
-
     Customer customer = customerRepository.findById(customerId).orElse(null);
     if (customer == null) {
       throw new com.example.rewards.rewardsystem.exception.CustomException(
@@ -38,109 +37,72 @@ public class TransactionService {
     transaction.setAmount(transactionDTO.getAmount());
     transaction.setDate(LocalDate.parse(transactionDTO.getDate()));
     transaction.setCustomer(customer);
-
-    return transactionRepository.save(transaction);
+    Transaction saved = transactionRepository.save(transaction);
+    return new TransactionResponseDto(saved.getId(), saved.getAmount(), saved.getDate().toString());
   }
 
   public CustomerRewardResponseDto calculateRewards(Long customerId) {
-    Customer customer =
-        customerRepository
-            .findById(customerId)
-            .orElseThrow(
-                () ->
-                    new com.example.rewards.rewardsystem.exception.CustomException(
-                        com.example.rewards.rewardsystem.exception.ErrorMessages
-                            .CUSTOMER_NOT_FOUND));
-    List<Transaction> transactions =
-        transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
-    int totalPoints = 0;
-    Map<String, Integer> pointsPerMonth = new HashMap<>();
-    List<TransactionResponseDto> transactionDtos =
-        transactions.stream()
-            .map(t -> new TransactionResponseDto(t.getId(), t.getAmount(), t.getDate().toString()))
-            .collect(Collectors.toList());
-    for (Transaction transaction : transactions) {
-      int points = this.calculatePoints(transaction.getAmount());
-      totalPoints += points;
-      String month = transaction.getDate().getYear() + "-" + transaction.getDate().getMonthValue();
-      pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
-    }
-    return new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
-        customer.getId(), customer.getName(), transactionDtos, totalPoints, pointsPerMonth);
+    Customer customer = customerRepository.findById(customerId)
+        .orElseThrow(() -> new com.example.rewards.rewardsystem.exception.CustomException(
+            com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND));
+    List<Transaction> transactions = transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
+    return buildCustomerRewardResponse(customer, transactions);
   }
 
-  public CustomerRewardResponseDto calculateRewardsCustomDateRange(
-      Long customerId, String startDate, String endDate) {
-    Customer customer =
-        customerRepository
-            .findById(customerId)
-            .orElseThrow(
-                () ->
-                    new com.example.rewards.rewardsystem.exception.CustomException(
-                        com.example.rewards.rewardsystem.exception.ErrorMessages
-                            .CUSTOMER_NOT_FOUND));
-    LocalDate start;
-    LocalDate end;
-    try {
-      start = LocalDate.parse(startDate);
-      end = LocalDate.parse(endDate);
-    } catch (Exception e) {
-      throw new com.example.rewards.rewardsystem.exception.CustomException(
-          "Invalid date format. Use yyyy-MM-dd.");
-    }
-    if (end.isBefore(start)) {
+public CustomerRewardResponseDto calculateRewardsCustomDateRange(
+      Long customerId, LocalDate startDate, LocalDate endDate) {
+    Customer customer = customerRepository.findById(customerId)
+        .orElseThrow(() -> new com.example.rewards.rewardsystem.exception.CustomException(
+            com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND));
+    if (endDate.isBefore(startDate)) {
       throw new com.example.rewards.rewardsystem.exception.CustomException(
           "End date must not be before start date.");
     }
-    List<Transaction> transactions =
-        transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
+    List<Transaction> transactions = transactionRepository.findByCustomerIdAndDateBetweenOrderByDateDesc(customerId, startDate, endDate);
+    return buildCustomerRewardResponse(customer, transactions);
+  }
+  private CustomerRewardResponseDto buildCustomerRewardResponse(Customer customer, List<Transaction> transactions) {
     int totalPoints = 0;
     Map<String, Integer> pointsPerMonth = new HashMap<>();
     List<TransactionResponseDto> transactionDtos =
         transactions.stream()
-            .filter(
-                t -> {
-                  LocalDate date = t.getDate();
-                  return (date.isEqual(start) || date.isAfter(start))
-                      && (date.isEqual(end) || date.isBefore(end));
-                })
             .map(t -> new TransactionResponseDto(t.getId(), t.getAmount(), t.getDate().toString()))
             .collect(Collectors.toList());
     for (Transaction transaction : transactions) {
       LocalDate date = transaction.getDate();
-      if ((date.isEqual(start) || date.isAfter(start))
-          && (date.isEqual(end) || date.isBefore(end))) {
-        int points = this.calculatePoints(transaction.getAmount());
-        totalPoints += points;
-        String month = date.getYear() + "-" + date.getMonthValue();
-        pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
-      }
+      int points = this.calculatePoints(transaction.getAmount().doubleValue());
+      totalPoints += points;
+      String month = date.getYear() + "-" + date.getMonthValue();
+      pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
     }
-    return new com.example.rewards.rewardsystem.dto.CustomerRewardResponseDto(
+    return new CustomerRewardResponseDto(
         customer.getId(), customer.getName(), transactionDtos, totalPoints, pointsPerMonth);
   }
 
-  public Map<String, Object> calculateRewardsByMonths(Long customerId, int months) {
-    List<Transaction> transactions =
-        transactionRepository.findByCustomerIdOrderByDateDesc(customerId);
-    int totalPoints = 0;
-    Map<String, Integer> pointsPerMonth = new HashMap<>();
+  public com.example.rewards.rewardsystem.dto.CustomerMonthlyRewardsResponseDto calculateRewardsByMonths(Long customerId, int months) {
+    Customer customer = customerRepository.findById(customerId)
+        .orElseThrow(() -> new com.example.rewards.rewardsystem.exception.CustomException(
+            com.example.rewards.rewardsystem.exception.ErrorMessages.CUSTOMER_NOT_FOUND));
     LocalDate now = LocalDate.now();
     LocalDate fromDate = now.minusMonths(months).withDayOfMonth(1);
-
+    List<Transaction> transactions = transactionRepository.findByCustomerIdAndDateBetweenOrderByDateDesc(
+        customerId, fromDate, now);
+    int totalPoints = 0;
+    Map<String, Integer> pointsPerMonth = new HashMap<>();
     for (Transaction transaction : transactions) {
       LocalDate date = transaction.getDate();
-      if (!date.isBefore(fromDate)) {
-        int points = this.calculatePoints(transaction.getAmount());
-        totalPoints += points;
-        String month = date.getYear() + "-" + date.getMonthValue();
-        pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
-      }
+      int points = this.calculatePoints(transaction.getAmount().doubleValue());
+      totalPoints += points;
+      String month = date.getYear() + "-" + date.getMonthValue();
+      pointsPerMonth.put(month, pointsPerMonth.getOrDefault(month, 0) + points);
     }
-    Map<String, Object> response = new HashMap<>();
-    response.put("totalPoints", totalPoints);
-    response.put("pointsPerMonth", pointsPerMonth);
-    return response;
+    return new com.example.rewards.rewardsystem.dto.CustomerMonthlyRewardsResponseDto(
+        customer.getId(),
+        customer.getName(),
+        totalPoints,
+        pointsPerMonth,
+        months
+    );
   }
 
   public List<TransactionResponseDto> getTransactions(Long customerId) {

@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TransactionResponseDto {
   private Long id;
-  private Double amount;
+  private java.math.BigDecimal amount;
   private String date;
 }

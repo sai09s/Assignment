@@ -21,7 +21,7 @@ class TransactionRepositoryTest {
     customer.setName("RepoTest");
     customer = customerRepository.save(customer);
     Transaction tx = new Transaction();
-    tx.setAmount("100.0");
+    tx.setAmount(new java.math.BigDecimal("100.0"));
     tx.setDate(LocalDate.now());
     tx.setCustomer(customer);
     transactionRepository.save(tx);

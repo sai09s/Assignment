@@ -29,25 +29,25 @@ class TransactionServiceTest {
   @Test
   void testCalculateRewardsCustomDateRange() {
     Long customerId = 1L;
-    String startDate = "2023-01-01";
-    String endDate = "2023-12-31";
+    java.time.LocalDate startDate = java.time.LocalDate.of(2023, 1, 1);
+    java.time.LocalDate endDate = java.time.LocalDate.of(2023, 12, 31);
     Customer customer = new Customer();
     customer.setId(customerId);
     customer.setName("Test User");
     Transaction transaction = new Transaction();
     transaction.setId(1L);
-    transaction.setAmount("120.0");
+    transaction.setAmount(new java.math.BigDecimal("120.0"));
     transaction.setDate(LocalDate.of(2023, 6, 15));
     transaction.setCustomer(customer);
     when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
-    when(transactionRepository.findByCustomerIdOrderByDateDesc(customerId))
+    when(transactionRepository.findByCustomerIdAndDateBetweenOrderByDateDesc(eq(customerId), any(LocalDate.class), any(LocalDate.class)))
         .thenReturn(Collections.singletonList(transaction));
     var result = transactionService.calculateRewardsCustomDateRange(customerId, startDate, endDate);
     assertEquals(90, result.getTotalPoints());
     assertTrue(result.getPointsPerMonth().containsKey("2023-6"));
     assertEquals(1, result.getTransactions().size());
     assertEquals(1L, result.getTransactions().get(0).getId());
-    assertEquals(120.0, result.getTransactions().get(0).getAmount());
+    assertEquals(new java.math.BigDecimal("120.0"), result.getTransactions().get(0).getAmount());
     assertEquals("2023-06-15", result.getTransactions().get(0).getDate());
   }
 
@@ -59,6 +59,6 @@ class TransactionServiceTest {
         com.example.rewards.rewardsystem.exception.CustomException.class,
         () ->
             transactionService.calculateRewardsCustomDateRange(
-                customerId, "2023-01-01", "2023-12-31"));
+                customerId, java.time.LocalDate.of(2023, 1, 1), java.time.LocalDate.of(2023, 12, 31)));
   }
 }

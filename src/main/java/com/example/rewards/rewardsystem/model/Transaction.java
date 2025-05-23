@@ -1,9 +1,11 @@
 package com.example.rewards.rewardsystem.model;
 
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,21 +17,18 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 public class Transaction {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  private String amount;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal amount;
 
-  @Getter private LocalDate date;
+    private LocalDate date;
 
-  @ManyToOne
-  @JoinColumn(name = "customer_id")
-  @JsonManagedReference
-  @JsonIgnore
-  private Customer customer;
-
-  public double getAmount() {
-    return Double.parseDouble(amount);
-  }
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    @JsonManagedReference
+    @JsonIgnore
+    private Customer customer;
 }

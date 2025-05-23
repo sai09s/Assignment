@@ -6,8 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-  List<Transaction> findByCustomerId(Long customerId);
+    // order by date desc
+    List<Transaction> findByCustomerIdOrderByDateDesc(Long customerId);
 
-  // order by date desc
-  List<Transaction> findByCustomerIdOrderByDateDesc(Long customerId);
+    // Efficient date range query
+    List<Transaction> findByCustomerIdAndDateBetweenOrderByDateDesc(Long customerId, java.time.LocalDate start, java.time.LocalDate end);
 }

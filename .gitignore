@@ -28,3 +28,4 @@ Thumbs.db
 application.properties
 application.yml
 application-dev.yml
+/target/
